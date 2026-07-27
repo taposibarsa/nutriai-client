@@ -1,0 +1,173 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { Leaf, Menu, X, LogOut, User } from "lucide-react";
+import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
+
+const guestLinks = [
+  { href: "/", label: "Home" },
+  { href: "/recipes", label: "Recipes" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
+
+const authLinks = [
+  { href: "/", label: "Home" },
+  { href: "/recipes", label: "Recipes" },
+  { href: "/meal-planner", label: "AI Meal Planner" },
+  { href: "/coach", label: "AI Coach" },
+  { href: "/items/add", label: "Add Recipe" },
+  { href: "/items/manage", label: "My Recipes" },
+  { href: "/about", label: "About" },
+];
+
+export function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const links = session ? authLinks : guestLinks;
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    setMenuOpen(false);
+    toast.success("Signed out successfully");
+    router.push("/");
+    router.refresh();
+  }
+
+  return (
+    <header className="sticky top-0 z-50 bg-[var(--forest)] text-white shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <Leaf className="h-5 w-5 text-[var(--coral)]" />
+          <span>
+            Nutri<span className="text-[var(--coral)]">AI</span>
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-6 lg:flex">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`text-sm font-medium transition hover:text-[var(--coral)] ${
+                pathname === link.href ? "text-[var(--coral)]" : "text-white/90"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {!isPending && !session && (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className="rounded-xl border border-[var(--coral)] px-4 py-2 text-sm font-semibold text-[var(--coral)] transition hover:bg-[var(--coral)] hover:text-white"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-xl bg-[var(--coral)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Register
+              </Link>
+            </div>
+          )}
+
+          {!isPending && session && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-full border border-white/20 px-2 py-1 text-sm"
+              >
+                {session.user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
+                    <User className="h-4 w-4" />
+                  </span>
+                )}
+                <span className="max-w-[120px] truncate">{session.user.name}</span>
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white p-3 text-[var(--foreground)] shadow-lg">
+                  <p className="truncate text-sm font-semibold">{session.user.name}</p>
+                  <p className="truncate text-xs text-[var(--warm-gray)]">{session.user.email}</p>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="mt-3 flex w-full items-center gap-2 rounded-lg bg-[var(--sage)] px-3 py-2 text-sm font-medium hover:bg-[var(--coral)] hover:text-white"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </nav>
+
+        <button
+          type="button"
+          className="lg:hidden"
+          aria-label={open ? "Close menu" : "Open menu"}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="border-t border-white/10 px-4 py-4 lg:hidden">
+          <div className="flex flex-col gap-3">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="text-sm font-medium"
+              >
+                {link.label}
+              </Link>
+            ))}
+            {!session ? (
+              <>
+                <Link href="/login" onClick={() => setOpen(false)} className="text-sm font-semibold text-[var(--coral)]">
+                  Login
+                </Link>
+                <Link href="/register" onClick={() => setOpen(false)} className="text-sm font-semibold text-[var(--coral)]">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  setOpen(false);
+                  await handleSignOut();
+                }}
+                className="text-left text-sm font-semibold text-[var(--coral)]"
+              >
+                Logout ({session.user.name})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
