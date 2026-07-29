@@ -64,6 +64,10 @@ export default function LoginForm() {
 
       if (result.error) {
         const msg = result.error.message || "";
+        if (msg.includes("429") || /too many|rate limit/i.test(msg)) {
+          toast.error("Too many login attempts. Wait about a minute, then try again.");
+          return;
+        }
         toast.error(
           isRetryableAuthError(msg)
             ? "Could not reach the server. Please try again in a moment."
@@ -241,6 +245,10 @@ function GoogleIcon() {
 function isRetryableAuthError(message?: string): boolean {
   if (!message) return true;
   const m = message.toLowerCase();
+  // Never auto-retry rate limits — that makes 429 worse
+  if (m.includes("429") || m.includes("too many") || m.includes("rate limit")) {
+    return false;
+  }
   return (
     m.includes("fetch") ||
     m.includes("network") ||
