@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Leaf, Menu, X, LogOut, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
@@ -22,6 +22,7 @@ const authLinks = [
   { href: "/items/add", label: "Add Recipe" },
   { href: "/items/manage", label: "My Recipes" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function Navbar() {
@@ -30,8 +31,42 @@ export function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const links = session ? authLinks : guestLinks;
+  const onLogin = pathname === "/login";
+  const onRegister = pathname === "/register";
+
+  const authBtnBase =
+    "rounded-full px-4 py-2 text-sm font-semibold transition";
+  const authBtnFilled =
+    `${authBtnBase} bg-[var(--coral)] text-[var(--forest)] hover:brightness-95`;
+  const authBtnOutline =
+    `${authBtnBase} border border-[var(--coral)] text-[var(--coral)] hover:bg-[var(--coral)] hover:text-[var(--forest)]`;
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onPointerDown(e: MouseEvent | TouchEvent) {
+      const el = menuRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -44,7 +79,10 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-[var(--forest)] text-white shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <Link
+          href="/"
+          className="font-display flex items-center gap-2 text-xl font-bold tracking-tight"
+        >
           <Leaf className="h-5 w-5 text-[var(--coral)]" />
           <span>
             Nutri<span className="text-[var(--coral)]">AI</span>
@@ -68,13 +106,13 @@ export function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="rounded-xl border border-[var(--coral)] px-4 py-2 text-sm font-semibold text-[var(--coral)] transition hover:bg-[var(--coral)] hover:text-white"
+                className={onLogin ? authBtnFilled : authBtnOutline}
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="rounded-xl bg-[var(--coral)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                className={onRegister || (!onLogin && !onRegister) ? authBtnFilled : authBtnOutline}
               >
                 Register
               </Link>
@@ -82,10 +120,12 @@ export function Navbar() {
           )}
 
           {!isPending && session && (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
                 className="flex items-center gap-2 rounded-full border border-white/20 px-2 py-1 text-sm"
               >
                 {session.user.image ? (
@@ -104,13 +144,17 @@ export function Navbar() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white p-3 text-[var(--foreground)] shadow-lg">
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--card)] p-3 text-[var(--foreground)] shadow-lg"
+                >
                   <p className="truncate text-sm font-semibold">{session.user.name}</p>
                   <p className="truncate text-xs text-[var(--warm-gray)]">{session.user.email}</p>
                   <button
                     type="button"
+                    role="menuitem"
                     onClick={handleSignOut}
-                    className="mt-3 flex w-full items-center gap-2 rounded-lg bg-[var(--sage)] px-3 py-2 text-sm font-medium hover:bg-[var(--coral)] hover:text-white"
+                    className="mt-3 flex w-full items-center gap-2 rounded-full bg-[var(--sage)] px-3 py-2 text-sm font-medium text-[var(--forest)] hover:bg-[var(--coral)]"
                   >
                     <LogOut className="h-4 w-4" />
                     Logout
@@ -139,20 +183,30 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium"
+                className={`text-sm font-medium ${
+                  pathname === link.href ? "text-[var(--coral)]" : "text-white/90"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
             {!session ? (
-              <>
-                <Link href="/login" onClick={() => setOpen(false)} className="text-sm font-semibold text-[var(--coral)]">
+              <div className="mt-1 flex flex-col gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className={`text-center ${onLogin ? authBtnFilled : authBtnOutline}`}
+                >
                   Login
                 </Link>
-                <Link href="/register" onClick={() => setOpen(false)} className="text-sm font-semibold text-[var(--coral)]">
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className={`text-center ${onRegister || (!onLogin && !onRegister) ? authBtnFilled : authBtnOutline}`}
+                >
                   Register
                 </Link>
-              </>
+              </div>
             ) : (
               <button
                 type="button"

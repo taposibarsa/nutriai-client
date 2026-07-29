@@ -1,13 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f7f4;
+  /* Organic market palette */
+  --background: #faf9f6;
   --foreground: #1c1c1e;
-  --forest: #1a3c34;
-  --coral: #ff6b47;
-  --saffron: #f5c518;
-  --sage: #f4f7f4;
-  --warm-gray: #6b7280;
+  --forest: #386639;
+  --coral: #fdcc3f; /* primary CTA (mustard) — kept token name for existing classes */
+  --saffron: #e9b44c;
+  --sage: #f5e6d3;
+  --card: #fcf7e8;
+  --warm-gray: #5c6b63;
+  --footer: #2d5230;
 }
 
 @theme inline {
@@ -17,13 +20,35 @@
   --color-coral: var(--coral);
   --color-saffron: var(--saffron);
   --color-sage: var(--sage);
+  --color-card: var(--card);
   --color-warm-gray: var(--warm-gray);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-footer: var(--footer);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui,
+    sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-plus-jakarta), var(--font-inter), system-ui, sans-serif;
+}
+
+/* Swiper pagination on home testimonials */
+.nutri-testimonials .swiper-pagination-bullet {
+  background: var(--forest);
+  opacity: 0.35;
+}
+.nutri-testimonials .swiper-pagination-bullet-active {
+  opacity: 1;
+  background: var(--coral);
 }
