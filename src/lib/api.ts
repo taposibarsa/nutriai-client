@@ -10,16 +10,11 @@ export class ApiError extends Error {
   }
 }
 
-/** Resolve fetch base for recipes/AI/etc. Uses same-origin gateway when SITE_URL is set. */
 export function getApiRequestUrl(path: string): string {
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    // /api/recipes → /api/gateway/api/recipes (proxied to Render)
-    return `/api/gateway${normalized}`;
-  }
   if (!API_URL) {
     throw new Error("NEXT_PUBLIC_API_URL is not set");
   }
+  const normalized = path.startsWith("/") ? path : `/${path}`;
   return `${API_URL}${normalized}`;
 }
 
@@ -57,14 +52,21 @@ export async function apiFetch<T = unknown>(
 }
 
 /** Warm the Render free tier before auth (reduces first-try failures). */
-export async function wakeApi(timeoutMs = 45_000): Promise<boolean> {
+export async function wakeApi(timeoutMs = 20_000): Promise<boolean> {
   if (!API_URL) return false;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    await fetch(API_URL, { method: "GET", signal: controller.signal, cache: "no-store" });
+    await fetch(API_URL, {
+      method: "GET",
+      signal: controller.signal,
+      cache: "no-store",
+      mode: "cors",
+      credentials: "omit",
+    });
     return true;
   } catch {
+    // CORS/network — still continue; sign-in may wake the service
     return false;
   } finally {
     clearTimeout(timer);

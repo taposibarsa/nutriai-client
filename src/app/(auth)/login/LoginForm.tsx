@@ -43,16 +43,19 @@ export default function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setSubmitting(true);
     try {
-      await wakeApi();
+      // Best-effort wake; don't block forever if Render is slow
+      await Promise.race([
+        wakeApi(15_000),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8_000)),
+      ]);
 
       let result = await authClient.signIn.email({
         email: values.email,
         password: values.password,
       });
 
-      // Retry once only for transport/wake failures — not for wrong password
       if (result.error && isRetryableAuthError(result.error.message)) {
-        await wakeApi();
+        await wakeApi(20_000);
         result = await authClient.signIn.email({
           email: values.email,
           password: values.password,
@@ -60,20 +63,21 @@ export default function LoginForm() {
       }
 
       if (result.error) {
+        const msg = result.error.message || "";
         toast.error(
-          isRetryableAuthError(result.error.message)
+          isRetryableAuthError(msg)
             ? "Could not reach the server. Please try again in a moment."
             : "Invalid email or password",
         );
         return;
       }
 
-      // Ensure session cookie is readable before navigating
       await authClient.getSession();
       toast.success(`Welcome back, ${result.data?.user.name ?? "there"}!`);
       router.push(redirectTo);
       router.refresh();
-    } catch {
+    } catch (err) {
+      console.error("Login failed:", err);
       toast.error("Could not reach the server. Please try again in a moment.");
     } finally {
       setSubmitting(false);
@@ -81,13 +85,13 @@ export default function LoginForm() {
   }
 
   async function handleGoogle() {
-    const origin = getSiteOrigin();
+    const origin = getSiteOrigin() || window.location.origin;
     const returnTo =
       redirectTo.startsWith("/") && !redirectTo.startsWith("//")
         ? `${origin}${redirectTo}`
         : origin;
     try {
-      await wakeApi();
+      void wakeApi(15_000);
       const { error } = await authClient.signIn.social({
         provider: "google",
         callbackURL: returnTo,
@@ -98,7 +102,8 @@ export default function LoginForm() {
             "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.",
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("Google sign-in failed:", err);
       toast.error("Could not start Google sign-in. Please try again.");
     }
   }
