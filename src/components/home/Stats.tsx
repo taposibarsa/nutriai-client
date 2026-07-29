@@ -77,6 +77,11 @@ function AnimatedStat({
 export function Stats() {
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    setChartReady(true);
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -114,38 +119,40 @@ export function Stats() {
           <p className="mb-4 text-center text-sm font-medium text-white/90">
             Meal Plans Generated Per Month
           </p>
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={CHART_DATA}>
-                <defs>
-                  <linearGradient id="plansFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fdcc3f" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="#fdcc3f" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="month"
-                  tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis hide />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "none",
-                    fontSize: 12,
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="plans"
-                  stroke="#fdcc3f"
-                  strokeWidth={2}
-                  fill="url(#plansFill)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="relative h-48 min-h-[12rem] w-full min-w-0">
+            {chartReady ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <AreaChart data={CHART_DATA}>
+                  <defs>
+                    <linearGradient id="plansFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fdcc3f" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#fdcc3f" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "none",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="plans"
+                    stroke="#fdcc3f"
+                    strokeWidth={2}
+                    fill="url(#plansFill)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : null}
           </div>
         </div>
       </div>

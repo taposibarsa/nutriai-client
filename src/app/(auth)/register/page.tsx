@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!sessionPending && session) {
+    if (!sessionPending && session?.user) {
       router.replace("/");
     }
   }, [session, sessionPending, router]);
@@ -104,7 +104,7 @@ export default function RegisterPage() {
     }
   }
 
-  if (session) {
+  if (session?.user) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner />

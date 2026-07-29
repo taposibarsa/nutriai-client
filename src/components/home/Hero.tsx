@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 
@@ -24,6 +25,12 @@ const fadeUp = {
 };
 
 export function Hero() {
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    setChartReady(true);
+  }, []);
+
   return (
     <section className="relative min-h-[65vh] w-full overflow-hidden">
       <Image
@@ -109,30 +116,32 @@ export function Hero() {
             className="mx-auto hidden w-full max-w-sm lg:block"
           >
             <div className="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-sm">
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={MACRO_DATA}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={85}
-                      startAngle={90}
-                      endAngle={-270}
-                      paddingAngle={2}
-                      isAnimationActive
-                      animationBegin={200}
-                      animationDuration={900}
-                    >
-                      {MACRO_DATA.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} stroke="none" />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="relative h-56 min-h-[14rem] w-full min-w-0">
+                {chartReady ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                    <PieChart>
+                      <Pie
+                        data={MACRO_DATA}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={85}
+                        startAngle={90}
+                        endAngle={-270}
+                        paddingAngle={2}
+                        isAnimationActive
+                        animationBegin={200}
+                        animationDuration={900}
+                      >
+                        {MACRO_DATA.map((entry) => (
+                          <Cell key={entry.name} fill={entry.color} stroke="none" />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : null}
               </div>
               <p className="mt-2 text-center text-sm font-medium text-white">
                 Balanced Macro Distribution

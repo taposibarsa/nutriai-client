@@ -29,11 +29,13 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isLoggedIn = Boolean(user);
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const links = session ? authLinks : guestLinks;
+  const links = isLoggedIn ? authLinks : guestLinks;
   const onLogin = pathname === "/login";
   const onRegister = pathname === "/register";
 
@@ -103,7 +105,7 @@ export function Navbar() {
           ))}
 
           {/* Show Login/Register even while session is loading — only hide when logged in */}
-          {!session && (
+          {!isLoggedIn && (
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
@@ -120,7 +122,7 @@ export function Navbar() {
             </div>
           )}
 
-          {session && (
+          {isLoggedIn && user && (
             <div className="relative" ref={menuRef}>
               <button
                 type="button"
@@ -129,11 +131,11 @@ export function Navbar() {
                 aria-haspopup="menu"
                 className="flex items-center gap-2 rounded-full border border-white/20 px-2 py-1 text-sm"
               >
-                {session.user.image ? (
+                {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={session.user.image}
-                    alt={session.user.name}
+                    src={user.image}
+                    alt={user.name ?? "User"}
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
@@ -141,7 +143,7 @@ export function Navbar() {
                     <User className="h-4 w-4" />
                   </span>
                 )}
-                <span className="max-w-[120px] truncate">{session.user.name}</span>
+                <span className="max-w-[120px] truncate">{user.name}</span>
               </button>
 
               {menuOpen && (
@@ -149,8 +151,8 @@ export function Navbar() {
                   role="menu"
                   className="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--card)] p-3 text-[var(--foreground)] shadow-lg"
                 >
-                  <p className="truncate text-sm font-semibold">{session.user.name}</p>
-                  <p className="truncate text-xs text-[var(--warm-gray)]">{session.user.email}</p>
+                  <p className="truncate text-sm font-semibold">{user.name}</p>
+                  <p className="truncate text-xs text-[var(--warm-gray)]">{user.email}</p>
                   <button
                     type="button"
                     role="menuitem"
@@ -191,7 +193,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {!session ? (
+            {!isLoggedIn ? (
               <div className="mt-1 flex flex-col gap-2">
                 <Link
                   href="/login"
@@ -217,7 +219,7 @@ export function Navbar() {
                 }}
                 className="text-left text-sm font-semibold text-[var(--coral)]"
               >
-                Logout ({session.user.name})
+                Logout ({user?.name})
               </button>
             )}
           </div>

@@ -10,7 +10,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
-    if (!isPending && !session) {
+    if (!isPending && !session?.user) {
       const loginUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
       router.replace(loginUrl);
     }
@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session) {
+  if (!session?.user) {
     return null;
   }
 

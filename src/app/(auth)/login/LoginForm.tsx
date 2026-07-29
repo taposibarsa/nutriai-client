@@ -25,7 +25,7 @@ export default function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!sessionPending && session) {
+    if (!sessionPending && session?.user) {
       router.replace(redirectTo);
     }
   }, [session, sessionPending, redirectTo, router]);
@@ -107,7 +107,7 @@ export default function LoginForm() {
 
   // Only block UI when we already have a session and are redirecting —
   // never hide the form forever while sessionPending (cold starts / CORS).
-  if (session) {
+  if (session?.user) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner />
