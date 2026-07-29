@@ -11,7 +11,7 @@ export function rewriteSetCookie(raw: string | null): string[] {
 }
 
 export function sanitizeSetCookie(cookie: string): string {
-  return cookie
+  const parts = cookie
     .split(";")
     .map((part) => part.trim())
     .filter((part) => {
@@ -25,8 +25,15 @@ export function sanitizeSetCookie(cookie: string): string {
       // First-party on Vercel → Lax is enough and works better on mobile Safari
       if (lower.startsWith("samesite=")) return "SameSite=Lax";
       return part;
-    })
-    .join("; ");
+    });
+
+  const joined = parts.join("; ");
+  const lowerJoined = joined.toLowerCase();
+  // Ensure Secure for HTTPS frontends (required with modern browsers)
+  if (!lowerJoined.includes("secure")) {
+    return `${joined}; Secure`;
+  }
+  return joined;
 }
 
 export function collectSetCookies(res: Response): string[] {

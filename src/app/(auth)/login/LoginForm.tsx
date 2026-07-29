@@ -43,7 +43,6 @@ export default function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setSubmitting(true);
     try {
-      // Render free tier may be asleep — wake + one retry
       await wakeApi();
 
       let result = await authClient.signIn.email({
@@ -51,7 +50,8 @@ export default function LoginForm() {
         password: values.password,
       });
 
-      if (result.error) {
+      // Retry once only for transport/wake failures — not for wrong password
+      if (result.error && isRetryableAuthError(result.error.message)) {
         await wakeApi();
         result = await authClient.signIn.email({
           email: values.email,
@@ -60,7 +60,11 @@ export default function LoginForm() {
       }
 
       if (result.error) {
-        toast.error("Invalid email or password");
+        toast.error(
+          isRetryableAuthError(result.error.message)
+            ? "Could not reach the server. Please try again in a moment."
+            : "Invalid email or password",
+        );
         return;
       }
 
@@ -226,5 +230,20 @@ function GoogleIcon() {
       <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.7 16.2 44 24 44z" />
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l.1.1 6.2 5.2C39.3 36.8 44 32 44 24c0-1.2-.1-2.3-.4-3.5z" />
     </svg>
+  );
+}
+
+function isRetryableAuthError(message?: string): boolean {
+  if (!message) return true;
+  const m = message.toLowerCase();
+  return (
+    m.includes("fetch") ||
+    m.includes("network") ||
+    m.includes("failed") ||
+    m.includes("unavailable") ||
+    m.includes("timeout") ||
+    m.includes("503") ||
+    m.includes("502") ||
+    m.includes("wake")
   );
 }

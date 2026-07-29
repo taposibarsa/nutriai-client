@@ -74,7 +74,7 @@ export default function RecipeDetailClient() {
 
   const alreadyReviewed = Boolean(
     session?.user?.id &&
-      recipe.reviews.some((r) => String(r.user) === session.user.id),
+      recipe.reviews.some((r) => String(r.user) === session?.user?.id),
   );
 
   async function handleSubmitReview(e: React.FormEvent) {

@@ -2,6 +2,8 @@ import { proxyToApi } from "@/lib/apiProxy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+/** Allow Render free-tier cold starts through the auth proxy. */
+export const maxDuration = 60;
 
 type Ctx = { params: Promise<{ all: string[] }> };
 
