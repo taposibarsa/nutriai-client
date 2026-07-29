@@ -64,6 +64,8 @@ export default function LoginForm() {
         return;
       }
 
+      // Ensure session cookie is readable before navigating
+      await authClient.getSession();
       toast.success(`Welcome back, ${result.data?.user.name ?? "there"}!`);
       router.push(redirectTo);
       router.refresh();

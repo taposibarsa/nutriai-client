@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { ApiWakeProvider } from "@/components/providers/ApiWakeProvider";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -45,10 +46,12 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col font-sans">
         <QueryProvider>
-          <Navbar />
-          <div className="flex-1">{children}</div>
-          <Footer />
-          <Toaster position="top-right" />
+          <ApiWakeProvider>
+            <Navbar />
+            <div className="flex-1">{children}</div>
+            <Footer />
+            <Toaster position="top-right" />
+          </ApiWakeProvider>
         </QueryProvider>
       </body>
     </html>

@@ -28,7 +28,7 @@ const authLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -102,7 +102,8 @@ export function Navbar() {
             </Link>
           ))}
 
-          {!isPending && !session && (
+          {/* Show Login/Register even while session is loading — only hide when logged in */}
+          {!session && (
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
@@ -119,7 +120,7 @@ export function Navbar() {
             </div>
           )}
 
-          {!isPending && session && (
+          {session && (
             <div className="relative" ref={menuRef}>
               <button
                 type="button"

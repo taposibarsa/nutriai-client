@@ -76,6 +76,7 @@ export default function RegisterPage() {
       }
 
       toast.success("Account created! Welcome to NutriAI");
+      await authClient.getSession();
       router.push("/");
       router.refresh();
     } catch {
