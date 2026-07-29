@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { authClient, getSiteOrigin } from "@/lib/auth-client";
+import { wakeApi } from "@/lib/api";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -43,15 +44,34 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterFormValues) {
     setSubmitting(true);
     try {
-      const { error } = await authClient.signUp.email({
+      await wakeApi();
+
+      let result = await authClient.signUp.email({
         name: values.name,
         email: values.email,
         password: values.password,
         ...(values.image ? { image: values.image } : {}),
       });
 
-      if (error) {
-        toast.error(error.message || "Email already registered");
+      if (result.error) {
+        const msg = result.error.message || "";
+        const maybeNetwork =
+          msg.toLowerCase().includes("fetch") ||
+          msg.toLowerCase().includes("network") ||
+          msg.toLowerCase().includes("failed");
+        if (maybeNetwork) {
+          await wakeApi();
+          result = await authClient.signUp.email({
+            name: values.name,
+            email: values.email,
+            password: values.password,
+            ...(values.image ? { image: values.image } : {}),
+          });
+        }
+      }
+
+      if (result.error) {
+        toast.error(result.error.message || "Email already registered");
         return;
       }
 
@@ -59,7 +79,7 @@ export default function RegisterPage() {
       router.push("/");
       router.refresh();
     } catch {
-      toast.error("Could not reach the server. Please try again.");
+      toast.error("Could not reach the server. Please try again in a moment.");
     } finally {
       setSubmitting(false);
     }
@@ -67,6 +87,7 @@ export default function RegisterPage() {
 
   async function handleGoogle() {
     try {
+      await wakeApi();
       const { error } = await authClient.signIn.social({
         provider: "google",
         callbackURL: getSiteOrigin(),

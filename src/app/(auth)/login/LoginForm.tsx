@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { authClient, getSiteOrigin } from "@/lib/auth-client";
+import { wakeApi } from "@/lib/api";
 import { loginSchema, type LoginFormValues } from "@/lib/validations";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -42,21 +43,32 @@ export default function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setSubmitting(true);
     try {
-      const { data, error } = await authClient.signIn.email({
+      // Render free tier may be asleep — wake + one retry
+      await wakeApi();
+
+      let result = await authClient.signIn.email({
         email: values.email,
         password: values.password,
       });
 
-      if (error) {
+      if (result.error) {
+        await wakeApi();
+        result = await authClient.signIn.email({
+          email: values.email,
+          password: values.password,
+        });
+      }
+
+      if (result.error) {
         toast.error("Invalid email or password");
         return;
       }
 
-      toast.success(`Welcome back, ${data?.user.name ?? "there"}!`);
+      toast.success(`Welcome back, ${result.data?.user.name ?? "there"}!`);
       router.push(redirectTo);
       router.refresh();
     } catch {
-      toast.error("Could not reach the server. Please try again.");
+      toast.error("Could not reach the server. Please try again in a moment.");
     } finally {
       setSubmitting(false);
     }
@@ -69,6 +81,7 @@ export default function LoginForm() {
         ? `${origin}${redirectTo}`
         : origin;
     try {
+      await wakeApi();
       const { error } = await authClient.signIn.social({
         provider: "google",
         callbackURL: returnTo,

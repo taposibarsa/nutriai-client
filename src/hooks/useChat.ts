@@ -8,14 +8,12 @@ import {
   type SetStateAction,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, getApiRequestUrl } from "@/lib/api";
 import type {
   ChatConversation,
   ChatConversationSummary,
   ChatMessage,
 } from "@/types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /** Hide SUGGESTIONS trailer (and incomplete trailing <!--) while streaming. */
 export function stripSuggestionsTrailer(text: string): string {
@@ -116,7 +114,7 @@ export function useChatStream(): UseChatStreamResult {
       activeMealPlanId?: string | null,
     ) => {
       const trimmed = message.trim();
-      if (!trimmed || !API_URL) return;
+      if (!trimmed || !process.env.NEXT_PUBLIC_API_URL) return;
 
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -153,7 +151,7 @@ export function useChatStream(): UseChatStreamResult {
         };
 
         const response = await fetch(
-          `${API_URL}/api/ai/chat/${conversationId}`,
+          getApiRequestUrl(`/api/ai/chat/${conversationId}`),
           {
             method: "POST",
             credentials: "include",
