@@ -47,30 +47,34 @@ const CATEGORIES = [
 
 export function DietaryCategories() {
   return (
-    <section className="overflow-x-hidden bg-background py-16 sm:py-20">
+    <section className="bg-background py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-forest sm:text-4xl">
+          <h2 className="text-2xl font-bold text-forest sm:text-3xl lg:text-4xl">
             Find Recipes for Every Lifestyle
           </h2>
-          <p className="mt-3 text-warm-gray">
+          <p className="mt-2 text-sm text-warm-gray sm:mt-3 sm:text-base">
             Jump straight into the diets and habits that fit how you eat.
           </p>
         </div>
 
-        <div className="mt-10 flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.tag}
               href={`/recipes?dietaryTag=${encodeURIComponent(cat.tag)}`}
-              className="min-w-[160px] shrink-0 rounded-2xl bg-card p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:min-w-0"
+              className="flex h-full flex-col rounded-2xl bg-card p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
             >
-              <span className="text-3xl" aria-hidden>
+              <span className="text-2xl sm:text-3xl" aria-hidden>
                 {cat.emoji}
               </span>
-              <h3 className="mt-3 text-base font-bold text-forest">{cat.label}</h3>
-              <p className="mt-1 text-xs text-warm-gray">{cat.blurb}</p>
-              <p className="mt-3 text-xs font-semibold text-saffron">
+              <h3 className="mt-2 text-sm font-bold text-forest sm:mt-3 sm:text-base">
+                {cat.label}
+              </h3>
+              <p className="mt-1 line-clamp-2 flex-1 text-[11px] leading-snug text-warm-gray sm:text-xs">
+                {cat.blurb}
+              </p>
+              <p className="mt-2 text-[11px] font-semibold text-saffron sm:mt-3 sm:text-xs">
                 {cat.count} recipes
               </p>
             </Link>

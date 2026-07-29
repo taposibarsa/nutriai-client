@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getSiteOrigin } from "@/lib/auth-client";
 import { loginSchema, type LoginFormValues } from "@/lib/validations";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -41,36 +41,46 @@ export default function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setSubmitting(true);
-    const { data, error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
-    });
-    setSubmitting(false);
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+      });
 
-    if (error) {
-      toast.error("Invalid email or password");
-      return;
+      if (error) {
+        toast.error("Invalid email or password");
+        return;
+      }
+
+      toast.success(`Welcome back, ${data?.user.name ?? "there"}!`);
+      router.push(redirectTo);
+      router.refresh();
+    } catch {
+      toast.error("Could not reach the server. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-
-    toast.success(`Welcome back, ${data?.user.name ?? "there"}!`);
-    router.push(redirectTo);
-    router.refresh();
   }
 
   async function handleGoogle() {
+    const origin = getSiteOrigin();
     const returnTo =
       redirectTo.startsWith("/") && !redirectTo.startsWith("//")
-        ? `${window.location.origin}${redirectTo}`
-        : window.location.origin;
-    const { error } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: returnTo,
-    });
-    if (error) {
-      toast.error(
-        error.message ||
-          "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.",
-      );
+        ? `${origin}${redirectTo}`
+        : origin;
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: returnTo,
+      });
+      if (error) {
+        toast.error(
+          error.message ||
+            "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.",
+        );
+      }
+    } catch {
+      toast.error("Could not start Google sign-in. Please try again.");
     }
   }
 
@@ -80,7 +90,9 @@ export default function LoginForm() {
     toast.success("Demo credentials filled");
   }
 
-  if (sessionPending || session) {
+  // Only block UI when we already have a session and are redirecting —
+  // never hide the form forever while sessionPending (cold starts / CORS).
+  if (session) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner />

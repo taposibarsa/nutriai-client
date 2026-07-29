@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getSiteOrigin } from "@/lib/auth-client";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -42,38 +42,47 @@ export default function RegisterPage() {
 
   async function onSubmit(values: RegisterFormValues) {
     setSubmitting(true);
-    const { error } = await authClient.signUp.email({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-      ...(values.image ? { image: values.image } : {}),
-    });
-    setSubmitting(false);
+    try {
+      const { error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        ...(values.image ? { image: values.image } : {}),
+      });
 
-    if (error) {
-      toast.error(error.message || "Email already registered");
-      return;
+      if (error) {
+        toast.error(error.message || "Email already registered");
+        return;
+      }
+
+      toast.success("Account created! Welcome to NutriAI");
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Could not reach the server. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-
-    toast.success("Account created! Welcome to NutriAI");
-    router.push("/");
-    router.refresh();
   }
 
   async function handleGoogle() {
-    const { error } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: window.location.origin,
-    });
-    if (error) {
-      toast.error(
-        error.message ||
-          "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.",
-      );
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: getSiteOrigin(),
+      });
+      if (error) {
+        toast.error(
+          error.message ||
+            "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on the server.",
+        );
+      }
+    } catch {
+      toast.error("Could not start Google sign-in. Please try again.");
     }
   }
 
-  if (sessionPending || session) {
+  if (session) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner />
