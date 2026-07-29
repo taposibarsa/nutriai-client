@@ -85,7 +85,10 @@ export default function RegisterPage() {
     <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/register.jpg')" }}
+        style={{
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=2000&q=80)",
+        }}
         aria-hidden
       />
       <div className="absolute inset-0 bg-[var(--forest)]/55" aria-hidden />
